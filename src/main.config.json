@@ -1,6 +1,6 @@
 {
     "regionPrefixLookup": {
-        "//": "Use the well known abbreviations from Microsoft docs.",
+        "//": "Use the well known abbreviations from Microsoft docs. ",
         "australiacentral": "auc",
         "australiaeast": "aue",
         "australiasoutheast": "ase"
