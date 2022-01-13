@@ -1,0 +1,51 @@
+{
+    "regionPrefixLookup": {
+        "//": "Use the well known abbreviations from Microsoft docs.",
+        "australiacentral": "auc",
+        "australiaeast": "aue",
+        "australiasoutheast": "ase"
+    },
+    "addressPrefixLookup": {
+        "//": "Use a separate /16 for each region",
+        "australiacentral": "10.0.0.0/16",
+        "australiaeast": "10.1.0.0/16",
+        "australiasoutheast": "10.2.0.0/16"
+    },
+    "hub": {
+        "name": "${shortLocation}-hub",
+        "id": "/subscriptions/c39328d8-5527-4feb-ac72-095166e1dd40/resourceGroups/auc-core-net/providers/Microsoft.Network/virtualNetworks/auc-hub"
+    },
+    "spokes": {
+        "spoke1": {
+            "name": "${shortLocation}-app-hrweb",
+            "prefix": {
+                "dev": "${octet1}.${octet2}.4.0/24",
+                "prd": "${octet1}.${octet2}.5.0/24"
+            },
+            "subnet1": {
+                "name": "web",
+                "prefix": {
+                    "dev": "${octet1}.${octet2}.4.0/28",
+                    "prd": "${octet1}.${octet2}.5.0/28" 
+                }
+            },
+            "subnet2": {
+                "name": "worker",
+                "prefix": {
+                    "dev": "${octet1}.${octet2}.4.16/28",
+                    "prd": "${octet1}.${octet2}.5.16/28"
+                }
+            },
+            "subnet3": {
+                "name": "database",
+                "prefix": {
+                    "dev": "${octet1}.${octet2}.4.32/28",
+                    "prd": "${octet1}.${octet2}.5.32/28"
+                }
+            }
+        },
+        "_peerToHub": [
+            "spoke1"
+        ]
+    }
+}

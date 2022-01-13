@@ -1,0 +1,13 @@
+build
+
+release uat
+
+release dev
+
+  region 1
+  region 2
+
+release prd
+
+  region 1
+  region 2
