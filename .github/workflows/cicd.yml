@@ -1,13 +1,131 @@
-build
+name: cicd
 
-release uat
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/*'
+  
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/*'
 
-release dev
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
-  region 1
-  region 2
+jobs:
+  
+  build:
+    name: Build and upload templates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
 
-release prd
+      - name: Install bicep tooling
+        run: |
+          # Fetch the latest Bicep CLI binary
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          # Mark it as executable
+          chmod +x ./bicep
+          # Add bicep to your PATH (requires admin)
+          sudo mv ./bicep /usr/local/bin/bicep
+          # Verify you can now access the 'bicep' command
+          bicep --version
+          # Done!
 
-  region 1
-  region 2
+      - name: Build bicep files
+        run: |
+          mkdir dst
+          bicep build src/main.bicep --outdir dst 
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: arm-templates
+          path: dst
+
+  dev:
+    name: Deploy to dev
+    if: github.event_name == 'pull_request'
+    needs: 
+      - build
+    environment: 
+      name: dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: arm-templates
+          path: dst
+
+      - name: Deploy to Australia East region
+        run: echo deploying to dev
+
+  uat:
+    name: Deploy to uat
+    if: github.event.ref == 'refs/heads/main'
+    needs: 
+      - build
+    environment: 
+      name: uat
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: arm-templates
+          path: dst
+
+      - name: Deploy to Australia East region
+        run: echo deploying to uat
+
+  prd:
+    name: Deploy to prd
+    needs: 
+      - uat
+    environment: 
+      name: prd
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: arm-templates
+          path: dst
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}          
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
+
+      - name: Deploy to Australia East region
+        uses: azure/arm-deploy@v1
+        with:
+          deploymentName: aue-main-${{ steps.date.outputs.date }}
+          scope: subscription
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+          region: australiaeast
+          template: dst/main.json
+          parameters: environment=prd
+
+      - name: Deploy to Australia Southeast region
+        uses: azure/arm-deploy@v1
+        with:
+          deploymentName: ase-main-${{ steps.date.outputs.date }}
+          scope: subscription
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+          region: australiasoutheast
+          template: dst/main.json  
+          parameters: environment=prd
+
+      - name: Display template output 
+        run: echo ${{ steps.deploy.outputs }}
