@@ -12,8 +12,7 @@
         "australiasoutheast": "10.2.0.0/16"
     },
     "hub": {
-        "name": "${shortLocation}-hub",
-        "id": "/subscriptions/c39328d8-5527-4feb-ac72-095166e1dd40/resourceGroups/auc-core-net/providers/Microsoft.Network/virtualNetworks/auc-hub"
+        "name": "${shortLocation}-hub"
     },
     "spokes": {
         "spoke1": {
@@ -45,7 +44,6 @@
             }
         },
         "_peerToHub": [
-            "spoke1"
         ]
     }
 }
